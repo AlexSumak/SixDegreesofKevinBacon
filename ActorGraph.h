@@ -49,8 +49,8 @@ public:
      */
     bool loadFromFile(const char* in_filename, bool use_weighted_edges);
 
-
-    Node* BFS(Node* n1, Node* n2);
+    vector<string> shortestPath(string, string);
+    Node* BFS(string, string);
 };
 
 

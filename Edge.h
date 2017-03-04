@@ -9,7 +9,9 @@ class Edge {
 public:
     string movie;
     vector <string> actors;
-    
+     Edge *prev;
+         
+             string movie_edge;
     Edge (string movie) : movie(movie){vector<string>actors;};
 };
 

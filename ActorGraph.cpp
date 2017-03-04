@@ -66,8 +66,10 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
         
         if(currActor == aMap.end()){
 
-            aMap[actor_name] = new Node(actor_name);
+            Node* node  = new Node(actor_name);
+            aMap.insert(make_pair<string, Node*> ((string)actor_name, (Node*)node));
             aMap.find(actor_name)->second->movies.push_back(realMovie);
+
         }
         else{
             int i = 0;
@@ -80,7 +82,8 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
         }
 
         if(currMovie == mMap.end()){
-            mMap[realMovie] = new Edge(realMovie);
+            Node* node  = new Node(realMovie);                                 
+            aMap.insert(make_pair<string, Node*> ((string)realMovie, (Node*)node));
             mMap.find(realMovie)->second->actors.push_back(actor_name);
         }
         else{
@@ -106,22 +109,30 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
 
 
 
-    Node* ActorGraph::BFS(Node* n1, Node* n2){
+    Node* ActorGraph::BFS(string a1, string a2){
         queue<Node*> q;
-        string find_actor = n1->name;
-        auto actor_iterator = aMap.find(find_actor);
-        if (actor_iterator == aMap.end()) return nullptr;
+        auto actor_iterator = aMap.find(a1);
+        cout<<aMap.size()<<endl;
+
+        if (actor_iterator == aMap.end()){ 
+            cout<<"rg"<<endl;
+            return nullptr;
+        }
         actor_iterator->second->dist = 0;
+        
+        cout<<actor_iterator->second<<endl;
         q.push(actor_iterator->second);  
         Node* curr;
 
         while(!q.empty()){
-
+            
+            cout<<"yee"<<endl;
             curr = q.front();
             q.pop();
 
-            if(curr == n2) 
-                return curr;
+            if(curr->name == a2) 
+               cout<<"yee"<<endl;
+               return curr;
 
             vector<string> movies = actor_iterator->second->movies;
 
@@ -135,7 +146,8 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
                      if (actor_iterator2->second->dist == -1){
                      actor_iterator2 ->second->dist += curr->dist;
                      actor_iterator2->second->prev = curr;
-                     q.push(actor_iterator2->second);
+                    actor_iterator2->second->movie_edge = movies[i];
+                        q.push(actor_iterator2->second);
                      }
                 }
             }
@@ -145,4 +157,16 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
     
 }
 
-
+    vector<string> ActorGraph::shortestPath(string first, string second) {
+        vector<string> returnString;
+        Node* temp = BFS(first, second);
+        //cout<<temp->name<< endl;
+        while (temp != nullptr) {
+            returnString.push_back(temp->name);
+            if (temp->movie_edge != "") {
+                returnString.push_back(temp->movie_edge);
+            }
+            temp = temp->prev;
+        }
+        return returnString; 
+    }
