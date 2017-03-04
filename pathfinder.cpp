@@ -83,16 +83,13 @@ int main(int argc, char* argv[])
             string first(record[0]); //first_actor
             string second(record[1]);//second_actor
 
-            ActorGraph a;
 
-            vector<string> returnPath = a.shortestPath(first, second);
+            vector<string> returnPath = g.shortestPath(first, second);
 
 
             if (returnPath.size() > 2) outfile << "(" << *returnPath.end() << ")--["; 
             cout<<record.empty()<<endl;
-            cout<<"enything"<<endl; 
             returnPath.pop_back();
-            cout<<"enything"<<endl;
             int index = 0;
             while (returnPath.size() != 0) {
                 outfile << returnPath.back();
