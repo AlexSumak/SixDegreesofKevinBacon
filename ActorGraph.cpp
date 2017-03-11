@@ -15,25 +15,24 @@
 
 using namespace std;
 
-
 ActorGraph::ActorGraph(void) {}
 
 
 ActorGraph::~ActorGraph()
 {
-    for(std::unordered_map<string,Node*>::iterator it = actors.begin()
+    for(unordered_map<string,Node*>::iterator it = actors.begin()
             ; it != actors.end(); ++it)
     {
         delete (it->second);
     }
 
-    for(std::unordered_map<string,Movie*>::iterator it = movies.begin()
+    for(unordered_map<string,Movie*>::iterator it = movies.begin()
             ; it != movies.end(); ++it)
     {
         delete (it->second);
     }
 
-    for(std::vector<Disjoint*>::iterator it = set.begin()
+    for(vector<Disjoint*>::iterator it = set.begin()
             ; it != set.end(); ++it)
     {
         delete (*it);
@@ -142,7 +141,7 @@ bool ActorGraph::loadFromFile(const char* in_filename)
 
     return true;
 }
-
+/*
 bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
         bool use_weighted)
 {
@@ -193,7 +192,7 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
         bool find;
 
 
-        std::unordered_map<std::string, Node*>::iterator it;
+        unordered_map<string, Node*>::iterator it;
         it = actors.find(source);
         if(it == actors.end())
         {
@@ -272,6 +271,7 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 
     return true;
 }
+*/
 
 bool ActorGraph::moviespan(const char* in_filename, 
         const char* out_filename, bool ufind)
@@ -285,8 +285,8 @@ bool ActorGraph::moviespan(const char* in_filename,
     Node* start;
     Node* end;
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> begin
-        = std::chrono::high_resolution_clock::now();
+    chrono::time_point<chrono::high_resolution_clock> begin
+        = chrono::high_resolution_clock::now();
 
     while(infile)
     {
@@ -327,7 +327,7 @@ bool ActorGraph::moviespan(const char* in_filename,
         string source(record[0]);
         string dest(record[1]);
 
-        std::unordered_map<std::string, Node*>::iterator it;
+        unordered_map<string, Node*>::iterator it;
         it = actors.find(source);
         if(it != actors.end())
         {
@@ -355,8 +355,8 @@ bool ActorGraph::moviespan(const char* in_filename,
     }
 
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> done 
-        = std::chrono::high_resolution_clock::now();
+    chrono::time_point<chrono::high_resolution_clock> done 
+        = chrono::high_resolution_clock::now();
 
 
     if(!infile.eof())
@@ -367,16 +367,16 @@ bool ActorGraph::moviespan(const char* in_filename,
 
     if(ufind)
     {
-        std::cout << "Union Find took ";
+        cout << "Union Find took ";
     }
     else
     {
-        std::cout << "BFS Search took ";
+        cout << "BFS Search took ";
     }
 
 
-    long int time = (long int)std::chrono::duration_cast<std::chrono::milliseconds>(done-begin).count();
-    std::cout << time << " milliseconds" << std::endl;
+    long int time = (long int)chrono::duration_cast<chrono::milliseconds>(done-begin).count();
+    cout << time << " milliseconds" << endl;
 
     infile.close();
     outfile.close();
@@ -384,19 +384,19 @@ bool ActorGraph::moviespan(const char* in_filename,
 }
 
 bool ActorGraph::averageDist(const char* out_filename, 
-        std::string actorName)
+        string actorName)
 {
 
     ofstream outfile(out_filename);
     outfile << "Actor" << endl;
 
 
-    std::unordered_map<string, Node*>::iterator it;
+    unordered_map<string, Node*>::iterator it;
     it = actors.find(actorName);
     if(it == actors.end())
     {
-        std::cout << "Actor, " << actorName << " does not exist in our"
-            << " database, select another" << std::endl;
+        cout << "Actor, " << actorName << " does not exist in our"
+            << " database, select another" << endl;
         return false;
     }
 
@@ -415,7 +415,7 @@ bool ActorGraph::averageDist(const char* out_filename,
             continue;
         }
 
-        outfile << end->name << std::endl;
+        outfile << end->name << endl;
         ++numActors;
 
 
@@ -436,9 +436,9 @@ bool ActorGraph::averageDist(const char* out_filename,
 
 
     outfile << numActors << " Actors are Connected to " 
-        << actorName << std::endl;
+        << actorName << endl;
     outfile << "The Average Shortest Unweighted Distance to "
-        << actorName << " is " << unweight_average << std::endl;
+        << actorName << " is " << unweight_average << endl;
 
     outfile.close();
     return true;
@@ -453,7 +453,7 @@ int ActorGraph::UnionFind(Node* start, Node* end)
     }
 
 
-    std::vector<Disjoint*>::iterator joint_it = set.begin();
+    vector<Disjoint*>::iterator joint_it = set.begin();
     for( ; joint_it != set.end(); ++joint_it)
     {
         Disjoint* disjoint = *joint_it;
@@ -466,7 +466,7 @@ int ActorGraph::UnionFind(Node* start, Node* end)
     while(year < 2016)
     {
 
-        std::unordered_map<string,Movie*>::iterator it = movies.begin();
+        unordered_map<string,Movie*>::iterator it = movies.begin();
         for( ; it != movies.end(); ++it)
         {
 
@@ -476,7 +476,7 @@ int ActorGraph::UnionFind(Node* start, Node* end)
                 Disjoint* disjoint = 0;
 
 
-                std::vector<Edge*>::iterator act_it = movie->edges.begin();
+                vector<Edge*>::iterator act_it = movie->edges.begin();
                 for( ; act_it != movie->edges.end(); ++act_it)
                 {
                     Node* actor = (*act_it)->node;
@@ -609,9 +609,9 @@ bool ActorGraph::DijkTraverse(Node* start, Node* end)
     {
         it->second->visit = false;
         it->second->prev = 0;
-        it->second->dist = std::numeric_limits<int>::max();
+        it->second->dist = numeric_limits<int>::max();
     }
-    std::priority_queue<Node*, std::vector<Node*>, ActorComp> pq;
+    priority_queue<Node*, vector<Node*>, ActorComp> pq;
     start->dist = 0;
     pq.push(start);
 
@@ -626,14 +626,14 @@ bool ActorGraph::DijkTraverse(Node* start, Node* end)
             next->visit = true;
 
 
-            std::vector<Edge*>::iterator it = next->edges.begin();
+            vector<Edge*>::iterator it = next->edges.begin();
             for( ; it != next->edges.end(); ++it)
             {
                 Edge* edge = *it;
                 Movie* movie = edge->movie;
 
 
-                std::vector<Edge*>::iterator m_it = movie->edges.begin();      
+                vector<Edge*>::iterator m_it = movie->edges.begin();      
                 for( ; m_it != movie->edges.end(); ++m_it)
                 {
                     Edge* inner_edge = *m_it;

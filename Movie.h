@@ -5,17 +5,21 @@
 #include <string>
 #include "Edge.h"
 
+using namespace std;
+
+
 class Edge;
+
 
 class Movie
 {
     public:
 
-        std::string name;
+        string name;
         int year;
-        std::vector<Edge*> edges;
+        vector<Edge*> edges;
 
-        Movie(std::string name, int year)
+        Movie(string name, int year)
             : name(name), year(year)
         {}
 

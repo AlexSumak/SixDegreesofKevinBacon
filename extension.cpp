@@ -1,13 +1,13 @@
 #include "ActorGraph.h"
-
+using namespace std;
 int main(int argc, char* argv[])
 {
 
     if(argc < 4)
     {
-        std::cout << "Incorrect number of arguments" << std::endl;
-        std::cout << "Usage: ./extension inputfile output actorName" 
-            << std::endl;
+        cout << "Incorrect number of arguments" << endl;
+        cout << "Usage: ./extension inputfile output actorName" 
+            << endl;
         return -1;
     }
 
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     }
 
 
-    std::string name(argv[3]);
+    string name(argv[3]);
     for(int index = 4; index < argc; ++index)
     {
         name += " ";

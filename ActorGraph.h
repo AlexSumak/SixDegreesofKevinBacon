@@ -29,9 +29,9 @@
 using namespace std;
 class ActorGraph {
     protected:
-        std::unordered_map<string, Node*> actors;
-        std::unordered_map<string, Movie*> movies;
-        std::vector<Disjoint*> set;
+        unordered_map<string, Node*> actors;
+        unordered_map<string, Movie*> movies;
+        vector<Disjoint*> set;
         int min_year = 9999;
         
         bool BFSTraverse(Node* start, Node* end, int year);
@@ -57,7 +57,7 @@ public:
         bool moviespan(const char* in_filename, const char* out_filename,
                          bool ufind);
 
-        bool averageDist(const char* out_filename, std::string actorName);
+        bool averageDist(const char* out_filename, string actorName);
 };
 
 

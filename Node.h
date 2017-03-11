@@ -13,22 +13,22 @@ class Edge;
 class Node {
 
     public:
-        std::string name;
+        string name;
         int index;
         int dist;
         bool visit;
         Edge* path;
         Node* prev;
-        std::vector<Edge*> edges;
+        vector<Edge*> edges;
 
-            Node(std::string name)
+            Node(string name)
             : name(name)
             {}
 
         ~Node()
         {
 
-            for(std::vector<Edge*>::iterator it = edges.begin()
+            for(vector<Edge*>::iterator it = edges.begin()
                     ; it != edges.end(); ++it)
             {
                 delete(*it);

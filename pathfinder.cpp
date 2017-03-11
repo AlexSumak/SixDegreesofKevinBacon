@@ -1,14 +1,14 @@
 #include "ActorGraph.h"
 
-
+using namespace std;
 int main(int argc, char* argv[])
 {
 
     if(argc < 5)
     {
-        std::cout << "Incorrect number of arguments." << std::endl;
-        std::cout << "Usage: ./pathfinder inputFile [u,w] pairs output" 
-            << std::endl;
+        cout << "Incorrect number of arguments." << endl;
+        cout << "Usage: ./pathfinder inputFile [u,w] pairs output" 
+            << endl;
         return -1;
     }
 
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        std::cout << "Incorrect Second Input: [u,w]" << std::endl;
+        cout << "Incorrect Second Input: [u,w]" << endl;
         return -1;
     }
 
@@ -43,6 +43,8 @@ int main(int argc, char* argv[])
     {
         return -1;
     }
-
     return 0;
 }
+
+
+

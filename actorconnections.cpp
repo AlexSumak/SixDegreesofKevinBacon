@@ -1,23 +1,24 @@
 #include "ActorGraph.h"
 
+using namespace std;
 int main(int argc, char* argv[])
 {
 
     if(argc < 4)
     {
-        std::cout << "Incorrect number of arguments" << std::endl;
-        std::cout << "Usage: ./actorconnections inputfile pairs output" 
-            << "[bfs,ufind(default)]" << std::endl;
+        cout << "Incorrect number of arguments" << endl;
+        cout << "Usage: ./actorconnections inputfile pairs output" 
+            << "[bfs,ufind(default)]" << endl;
         return -1;
     }
 
-    std::string algor = "ufind";
+    string algor = "ufind";
     bool ufind = false;
 
 
     if(argc == 5)
     {
-        algor = std::string(argv[4]);  
+        algor = string(argv[4]);  
     }
 
 
@@ -31,8 +32,8 @@ int main(int argc, char* argv[])
     }
     else
     {
-        std::cout << "Incorrect Fourth Input: [bfs,ufind(default)]" 
-            << std::endl;
+        cout << "Incorrect Fourth Input: [bfs,ufind(default)]" 
+            << endl;
         return -1;
     }
 
