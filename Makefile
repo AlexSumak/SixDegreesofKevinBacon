@@ -14,21 +14,22 @@ else
     LDFLAGS += -g
 endif
 
-all: pathfinder
+all: pathfinder actorconnections extension
+
 
 
 
 # include what ever source code *.h files pathfinder relies on (these are merely the ones that were used in the solution)
 
 pathfinder: ActorGraph.o Node.o Edge.o 
-
-
+extension: ActorGraph.o
+actorconnections: ActorGraph.o
 
 # include what ever source code *.h files ActorGraph relies on (these are merely the ones that were used in the solution)
 
 # Note: you do not have to include a *.cpp file if it aleady has a paired *.h file that is already included with class/method headers
 
-ActorGraph.o: Node.o Edge.o ActorGraph.h
+ActorGraph.o: Node.o Edge.o ActorGraph.h Disjoint.h Movie.h
 
 Node.o: Node.h
 

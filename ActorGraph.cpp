@@ -1,39 +1,66 @@
 /*
- * ActorGraph.cpp
- * Author: Blake McMurray Alex Sumak
- * Date: 3/2/17
- *
- * This file is meant to exist as a container for starter code that you can use to read the input file format
- * defined in movie_casts.tsv. Feel free to modify any/all aspects as you wish.
- */
- 
+ ** ActorGraph.cpp
+ ** Author: Blake McMurray Alex Sumak
+ ** Date: 3/2/17
+ **
+ ** This file is meant to exist as a container for starter code that you can use to read the input file format
+ ** defined in movie_casts.tsv. Feel free to modify any/all aspects as you wish.
+ **/
+
 #include <fstream>
-#include <iostream>
 #include <sstream>
-#include <string>
-#include <vector>
-#include "ActorGraph.h"
 #include <queue>
+#include <limits>
+#include "ActorGraph.h"
+
 using namespace std;
+
 
 ActorGraph::ActorGraph(void) {}
 
-bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) {
 
-    // Initialize the file stream
+ActorGraph::~ActorGraph()
+{
+    for(std::unordered_map<string,Node*>::iterator it = actors.begin()
+            ; it != actors.end(); ++it)
+    {
+        delete (it->second);
+    }
+
+    for(std::unordered_map<string,Movie*>::iterator it = movies.begin()
+            ; it != movies.end(); ++it)
+    {
+        delete (it->second);
+    }
+
+    for(std::vector<Disjoint*>::iterator it = set.begin()
+            ; it != set.end(); ++it)
+    {
+        delete (*it);
+    }
+}
+
+bool ActorGraph::loadFromFile(const char* in_filename)
+{
+
     ifstream infile(in_filename);
 
+
     bool have_header = false;
-  
-    // keep reading lines until the end of file is reached
-    while (infile) {
+    Node* node = 0;
+    Movie* movie = 0;
+    Edge* edge = 0;
+    int index = 0;
+
+    while (infile)
+    {
         string s;
-    
-        // get the next line
+
         if (!getline( infile, s )) break;
 
-        if (!have_header) {
-            // skip the header
+        if (!have_header)
+        {
+
             have_header = true;
             continue;
         }
@@ -41,76 +68,73 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
         istringstream ss( s );
         vector <string> record;
 
-        while (ss) {
+        while (ss)
+        {
             string next;
-      
-            // get the next string before hitting a tab character and put it in 'next'
+
+
             if (!getline( ss, next, '\t' )) break;
 
             record.push_back( next );
         }
-    
-        if (record.size() != 3) {
-            // we should have exactly 3 columns
+
+        if (record.size() != 3)
+        {
+
             continue;
         }
+
 
         string actor_name(record[0]);
         string movie_title(record[1]);
         int movie_year = stoi(record[2]);
-    
-        // we have an actor/movie relationship, now what?
-        auto currActor = aMap.find(actor_name);
-        string realMovie = movie_title + "#@" + to_string(movie_year);
-        auto currMovie = mMap.find(realMovie);
-        
-        if(currActor == aMap.end()){
-            
-            Node* node  = new Node(actor_name);
-            aMap.insert(make_pair<string, Node*> ((string)actor_name, (Node*)node));
-            aMap.find(actor_name)->second->movies.push_back(realMovie);
-            cout << node->name << " " << realMovie << endl;
 
-        }
-        else{
-            currActor->second->movies.push_back(realMovie);
-            cout << currActor->second->name << " " << realMovie << endl;
-            /*cout<<actor_name+"yes"<<endl;
-            int i = 0;
-            for(;i < currActor->second->movies.size(); i++){
-                if (realMovie == currActor->second->movies[i])
-                    cout<<currActor->second->movies[i]+"rig"<<endl;
-                    break;
-            }
-            if(i == currActor->second->movies.size()-1)
-                cout<<"righteous"<<endl;
-                currActor->second->movies.push_back(realMovie);*/
+
+        if(movie_year < min_year)
+        {
+            min_year = movie_year;
         }
 
-        if(currMovie == mMap.end()){
+
+        string movie_key = record[1] + record[2];
 
 
-            Edge* edge  = new Edge(realMovie);                                 
-            mMap.insert(make_pair<string, Edge*> ((string)realMovie, (Edge*)edge));
-            mMap.find(realMovie)->second->actors.push_back(actor_name);
-            cout<<actor_name<<endl;
+        if(actors.find(actor_name) == actors.end())
+        {
+
+            node = new Node(actor_name);
+            node->index = index++;
+            actors.insert({actor_name, node});
+
+
+            Disjoint* disjoint = new Disjoint(node);
+            set.push_back(disjoint);
         }
-        else{
-
-            currMovie->second->actors.push_back(actor_name);
-            cout<<actor_name<<endl;
-
-            /*int i = 0;
-            for(;i < currMovie->second->actors.size(); i++){
-                if (actor_name == currMovie->second->actors[i])
-                    break;
-            }
-            if(i == currMovie->second->actors.size()-1)
-                currMovie->second->actors.push_back(actor_name);*/
+        else
+        {
+            node = actors[actor_name];
         }
+
+
+        if(movies.find(movie_key) == movies.end())
+        {
+            movie = new Movie(movie_title, movie_year);
+            movies.insert({movie_key, movie});
+        }
+        else
+        {
+            movie = movies[movie_key];
+        }
+
+        Edge* edge = new Edge(node, movie, 1 + 2015 - movie->year);
+
+
+        node->edges.push_back(edge);
+        movie->edges.push_back(edge);
     }
 
-    if (!infile.eof()) {
+    if (!infile.eof())
+    {
         cerr << "Failed to read " << in_filename << "!\n";
         return false;
     }
@@ -119,64 +143,516 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted_edges) 
     return true;
 }
 
+bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
+        bool use_weighted)
+{
+
+    ifstream infile(in_filename);
+    ofstream outfile(out_filename);
+
+    bool have_header = false;
+
+    Node* start;
+    Node* end;
+
+    while(infile)
+    {
+        string s;
 
 
+        if(!getline(infile,s)) break;
 
-    Node* ActorGraph::BFS(string a1, string a2){
-        queue<Node*> q;
-        auto actor_iterator = aMap.find(a1);
-        if (actor_iterator == aMap.end()){
-            return nullptr;
+        if(!have_header)
+        {
+            have_header = true;
+            outfile << "(actor)--[movie#@year]-->(actor)--...\n";
+            continue;
         }
-        actor_iterator->second->dist = 0;
-        
-        cout<<actor_iterator->second<<endl;
-        q.push(actor_iterator->second);  
-        Node* curr;
-        cout<<q.size()<<endl;
-        while(!q.empty()){
-            
-            curr = q.front();
-            q.pop();
 
-            if(curr->name == a2) 
-               return curr;
 
-            vector<string> movies = actor_iterator->second->movies;
+        istringstream ss(s);
+        vector<string> record;
 
-                cout << curr->name << " " << movies.size() << endl;
+        while(ss)
+        {
+            string next;
+            if(!getline(ss, next, '\t')) break;
 
-            for(int i = 0; i < movies.size() ; i++) {
-                cout<<movies[i]<<endl;
-                auto movie_iterator = mMap.find(movies[i]);
-                vector<string> actors = movie_iterator->second->actors;
+            record.push_back(next);
+        }
 
-                for (int j = 0; j < actors.size(); j++) {
-                     cout << actors[j] << endl;
-                     auto actor_iterator2 = aMap.find(actors[j]);
-                     if (actor_iterator2->second->dist == -1){
-                     actor_iterator2 ->second->dist += curr->dist;
-                     actor_iterator2->second->prev = curr;
-                     actor_iterator2->second->movie_edge = movies[i];
-                     q.push(actor_iterator2->second);
-                     }
+
+        if(record.size() != 2)
+        {
+            continue;
+        }
+
+
+        string source(record[0]);
+        string dest(record[1]);
+        bool find;
+
+
+        std::unordered_map<std::string, Node*>::iterator it;
+        it = actors.find(source);
+        if(it == actors.end())
+        {
+            continue;
+        }
+        it = actors.find(dest);
+        if(it == actors.end())
+        {
+            continue;
+        }
+
+
+        start = actors[source];
+        end = actors[dest];
+
+
+        if(use_weighted)
+        {
+
+            find = DijkTraverse(end,start);
+            if(find)
+            {
+
+                Node* trav = start;
+                while(1)
+                {
+                    outfile << "(" << trav->name << ")" << "--";
+                    outfile << "[" << trav->path->movie->name << "#@" 
+                        << trav->path->movie->year << "]" << "-->";
+                    trav = trav->path->node;
+
+
+                    if(trav == end)
+                    {
+                        outfile << "(" << trav->name << ")" << endl;
+                        break;
+                    }
                 }
             }
-        }  
-        return nullptr;
+        }
 
-    
+
+        else
+        {
+
+            find = BFSTraverse(end, start, 2016);
+            if(find)
+            {
+
+                Node* trav = start;
+                while(1)
+                {
+                    outfile << "(" << trav->name << ")" << "--";
+                    outfile << "[" << trav->path->movie->name << "#@" 
+                        << trav->path->movie->year << "]" << "-->";
+                    trav = trav->path->node;
+
+                    if(trav == end)
+                    {
+                        outfile << "(" << trav->name << ")" << endl;
+                        break;
+                    } 
+                }
+            }
+        }
+    }
+
+
+    if(!infile.eof())
+    {
+        cerr << "Failed to read " << in_filename << "!\n";
+        return false;
+    }
+    infile.close();
+    outfile.close();
+
+    return true;
 }
 
-    vector<string> ActorGraph::shortestPath(string first, string second) {
-        vector<string> returnString;
-        Node* temp = BFS(first, second);
-        while (temp != nullptr) {
-            returnString.push_back(temp->name);
-            if (temp->movie_edge != "") {
-                returnString.push_back(temp->movie_edge);
-            }
-            temp = temp->prev;
+bool ActorGraph::moviespan(const char* in_filename, 
+        const char* out_filename, bool ufind)
+{
+
+    ifstream infile(in_filename);
+    ofstream outfile(out_filename);
+
+    bool have_header = false;
+
+    Node* start;
+    Node* end;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> begin
+        = std::chrono::high_resolution_clock::now();
+
+    while(infile)
+    {
+
+        start = 0;
+        end = 0;
+        string s;
+
+
+        if(!getline(infile,s)) break;
+
+
+        if(!have_header)
+        {
+            have_header = true;
+            outfile << "Actor1\tActor2\tYear" << endl;
+            continue;
         }
-        return returnString; 
+
+        istringstream ss(s);
+        vector<string> record;
+
+
+        while(ss)
+        {
+            string next;
+            if(!getline(ss, next, '\t')) break;
+
+            record.push_back(next);
+        }
+
+        if(record.size() != 2)
+        {
+            continue;
+        }
+
+
+        string source(record[0]);
+        string dest(record[1]);
+
+        std::unordered_map<std::string, Node*>::iterator it;
+        it = actors.find(source);
+        if(it != actors.end())
+        {
+            start = it->second;
+        }
+        it = actors.find(dest);
+        if(it != actors.end())
+        {
+            end = it->second;
+        }
+
+
+        if(ufind)
+        {
+
+            int year = UnionFind(start,end);
+            outfile << source << "\t" << dest << "\t" << year << endl;
+        }
+        else
+        {
+
+            int year = BFSSearch(start, end);
+            outfile << source << "\t" << dest << "\t" << year << endl;
+        }
     }
+
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> done 
+        = std::chrono::high_resolution_clock::now();
+
+
+    if(!infile.eof())
+    {
+        cerr << "Failed to read " << in_filename << "!\n";
+        return false;
+    }
+
+    if(ufind)
+    {
+        std::cout << "Union Find took ";
+    }
+    else
+    {
+        std::cout << "BFS Search took ";
+    }
+
+
+    long int time = (long int)std::chrono::duration_cast<std::chrono::milliseconds>(done-begin).count();
+    std::cout << time << " milliseconds" << std::endl;
+
+    infile.close();
+    outfile.close();
+    return true;
+}
+
+bool ActorGraph::averageDist(const char* out_filename, 
+        std::string actorName)
+{
+
+    ofstream outfile(out_filename);
+    outfile << "Actor" << endl;
+
+
+    std::unordered_map<string, Node*>::iterator it;
+    it = actors.find(actorName);
+    if(it == actors.end())
+    {
+        std::cout << "Actor, " << actorName << " does not exist in our"
+            << " database, select another" << std::endl;
+        return false;
+    }
+
+    Node* start = it->second; 
+
+
+    int unweight_dist = 0;
+    int numActors = 0;
+    for(auto act_it = actors.begin(); act_it != actors.end(); ++act_it)
+    {
+        Node* end = act_it->second;
+
+        bool find = BFSTraverse(end, start, 2016);
+        if(!find)
+        {
+            continue;
+        }
+
+        outfile << end->name << std::endl;
+        ++numActors;
+
+
+        Node* trav = start;
+        while(1)
+        {
+            trav = trav->path->node;
+            ++unweight_dist;
+            if(trav == end)
+            {
+                break;
+            } 
+        }
+    }
+
+
+    double unweight_average = (double)unweight_dist / numActors;
+
+
+    outfile << numActors << " Actors are Connected to " 
+        << actorName << std::endl;
+    outfile << "The Average Shortest Unweighted Distance to "
+        << actorName << " is " << unweight_average << std::endl;
+
+    outfile.close();
+    return true;
+}
+
+int ActorGraph::UnionFind(Node* start, Node* end)
+{
+
+    if(!start || !end)
+    {
+        return 9999;
+    }
+
+
+    std::vector<Disjoint*>::iterator joint_it = set.begin();
+    for( ; joint_it != set.end(); ++joint_it)
+    {
+        Disjoint* disjoint = *joint_it;
+        disjoint->sentinel = disjoint;
+        disjoint->size = 1;
+    }
+
+
+    int year = min_year;
+    while(year < 2016)
+    {
+
+        std::unordered_map<string,Movie*>::iterator it = movies.begin();
+        for( ; it != movies.end(); ++it)
+        {
+
+            Movie* movie = it->second;
+            if(movie->year == year)
+            {
+                Disjoint* disjoint = 0;
+
+
+                std::vector<Edge*>::iterator act_it = movie->edges.begin();
+                for( ; act_it != movie->edges.end(); ++act_it)
+                {
+                    Node* actor = (*act_it)->node;
+
+                    if(disjoint)
+                    {
+                        disjoint->Union(set[actor->index]);
+                    }
+
+                    disjoint = set[actor->index];
+                }
+            }
+        }
+
+
+        Disjoint* first = set[start->index];
+        Disjoint* second = set[end->index];
+        if(first->Find()->node->index == second->Find()->node->index)
+        {
+            return year;
+        }
+
+
+        year++;
+    }
+    return 9999;
+}
+
+bool ActorGraph::BFSTraverse(Node* start, Node* end, int year)
+{
+
+    if(!start || !end)
+    {
+        return false;
+    }
+
+
+    if(start->index == end->index)
+    {
+        return false;
+    }
+
+
+    queue<Node*> explore;
+    for(auto it = actors.begin(); it != actors.end(); ++it)
+    {
+        it->second->visit = false;
+    }
+    explore.push(start);
+    start->visit = true;
+
+    while(!explore.empty())
+    {
+
+        Node* next = explore.front();
+        explore.pop();
+
+
+        vector<Edge*>::iterator it = next->edges.begin();
+        for( ; it != next->edges.end(); ++it)
+        {
+            Movie* movie = (*it)->movie;
+
+            if(movie->year > year)
+            {
+                continue;
+            }
+
+
+            vector<Edge*>::iterator a_it = movie->edges.begin();
+            for( ; a_it != movie->edges.end(); ++a_it)
+            {
+                Node* actor = (*a_it)->node;
+
+
+                if(!actor->visit)
+                {
+
+                    if(actor->index == end->index)
+                    {
+
+                        end->path = *it;
+                        end->prev = next;
+                        return true;
+                    }
+                    else
+                    {
+
+                        actor->visit = true;
+                        actor->path = *it;
+                        actor->prev = next;
+                        explore.push(actor);
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+int ActorGraph::BFSSearch(Node* start, Node* end)
+{
+    if(!start || !end)
+    {
+        return 9999;
+    }
+
+    bool find = false;
+    int year = min_year;
+    while(year < 2016)
+    {
+        find = BFSTraverse(start, end, year);
+        if(find)
+        {
+            return year;    
+        }
+        year++;
+    }
+    return 9999; 
+}
+bool ActorGraph::DijkTraverse(Node* start, Node* end)
+{
+
+    if(!start || !end)
+    {
+        return false;
+    }
+
+
+    for(auto it = actors.begin(); it != actors.end(); ++it)
+    {
+        it->second->visit = false;
+        it->second->prev = 0;
+        it->second->dist = std::numeric_limits<int>::max();
+    }
+    std::priority_queue<Node*, std::vector<Node*>, ActorComp> pq;
+    start->dist = 0;
+    pq.push(start);
+
+    while(!pq.empty())
+    {
+
+        Node* next = pq.top();
+        pq.pop();
+
+        if(!next->visit)
+        {
+            next->visit = true;
+
+
+            std::vector<Edge*>::iterator it = next->edges.begin();
+            for( ; it != next->edges.end(); ++it)
+            {
+                Edge* edge = *it;
+                Movie* movie = edge->movie;
+
+
+                std::vector<Edge*>::iterator m_it = movie->edges.begin();      
+                for( ; m_it != movie->edges.end(); ++m_it)
+                {
+                    Edge* inner_edge = *m_it;
+                    Node* actor = inner_edge->node;
+
+
+                    int distance = inner_edge->weight + next->dist;
+                    if(distance < actor->dist)
+                    {
+
+                        actor->prev = next;
+                        actor->path = edge;
+                        actor->dist = distance;
+                        pq.push(actor);
+                    }
+                }
+            }
+        }
+    }
+    return true; 
+}
+

@@ -11,46 +11,53 @@
 
 #ifndef ACTORGRAPH_H
 #define ACTORGRAPH_H
-#include <unordered_map>
+
 #include <iostream>
-#include "Edge.h"
-#include "Node.h"
+#include <vector>
 #include <string>
+#include <unordered_map>
+#include <chrono>
+#include "Node.h"
+#include "Edge.h"
+#include "Movie.h"
+#include "Disjoint.h"
 
 
 // Maybe include some data structures here
 
 
 using namespace std;
-class Node;
-class Edge;
 class ActorGraph {
-protected:
-  
-    // Maybe add class data structure(s) here
+    protected:
+        std::unordered_map<string, Node*> actors;
+        std::unordered_map<string, Movie*> movies;
+        std::vector<Disjoint*> set;
+        int min_year = 9999;
+        
+        bool BFSTraverse(Node* start, Node* end, int year);
+
+        bool DijkTraverse(Node* start, Node* end);
+
+        int BFSSearch(Node* start, Node* end);
+
+        int UnionFind(Node*, Node* end);
 
 public:
 
-    unordered_map<string, Edge*> mMap;
-    unordered_map<string, Node*> aMap;
 
-    ActorGraph(void);
-    
-    // Maybe add some more methods here
-    
-    /** You can modify this method definition as you wish
-     *
-     * Load the graph from a tab-delimited file of actor->movie relationships.
-     *
-     * in_filename - input filename
-     * use_weighted_edges - if true, compute edge weights as 1 + (2015 - movie_year), otherwise all edge weights will be 1
-     *
-     * return true if file was loaded sucessfully, false otherwise
-     */
-    bool loadFromFile(const char* in_filename, bool use_weighted_edges);
+        ActorGraph(void);
 
-    vector<string> shortestPath(string, string);
-    Node* BFS(string, string);
+        ~ActorGraph();
+
+        bool loadFromFile(const char* in_filename);
+        
+        bool findPath(const char* in_filename, const char* out_filename, 
+                        bool use_weighted);
+
+        bool moviespan(const char* in_filename, const char* out_filename,
+                         bool ufind);
+
+        bool averageDist(const char* out_filename, std::string actorName);
 };
 
 

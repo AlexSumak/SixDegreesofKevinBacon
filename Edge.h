@@ -1,18 +1,29 @@
-#ifndef EDGE_H
+#ifndef EDGE_H 
 #define EDGE_H
-#include <string>
-#include <vector>
-using namespace std;
 
-class Edge {
+#include "Node.h"
+#include "Movie.h"
 
-public:
-    string movie;
-    vector <string> actors;
-     Edge *prev;
-         
-             string movie_edge;
-    Edge (string movie) : movie(movie){vector<string>actors;};
+class Node;
+class Movie;
+
+class Edge 
+{
+
+    public:
+        Node* node;
+        Movie* movie;
+        int weight;
+
+
+        Edge(Node* node, Movie* movie, int weight)
+            :node(node), movie(movie), weight(weight)
+        {}
+
+
+        ~Edge()
+        {}
+
 };
 
 #endif // EDGE_H
